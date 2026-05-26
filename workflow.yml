@@ -1,0 +1,40 @@
+name: Auto Extract ZIP
+
+on:
+  push:
+    paths:
+      - "github-ready-fintech-react.zip"
+
+permissions:
+  contents: write
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install unzip
+        run: sudo apt-get update && sudo apt-get install -y unzip
+
+      - name: Extract ZIP
+        run: |
+          rm -rf extracted
+          mkdir extracted
+          unzip github-ready-fintech-react.zip -d extracted
+
+      - name: Copy extracted files to root
+        run: |
+          rsync -av --exclude='.git' extracted/ ./
+
+      - name: Commit extracted files
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .
+          git commit -m "Auto-extract ZIP" || echo "No changes to commit"
+          git push
